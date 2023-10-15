@@ -27,7 +27,7 @@ app.post("/getPalettes", (req, res) => {
     }
 
     rows.forEach((row) => {
-      arr.push(row);
+      arr.push(row["colors"]);
     });
     res.send(arr);
   });
@@ -35,7 +35,6 @@ app.post("/getPalettes", (req, res) => {
   db.close();
 });
 
-//POST METHODS
 app.post("/login", (req, res) => {
   let db = new sqlite3.Database("./db/users.db", (err) => {
     if (err) {
@@ -72,7 +71,7 @@ app.post("/postPalettes", (req, res) => {
   let colors = req.body["colors"];
   let colorsString = "";
   colors.forEach((color) => {
-    colorsString += color;
+    colorsString += "." + color;
   });
   console.log(colorsString);
 
@@ -90,7 +89,36 @@ app.post("/postPalettes", (req, res) => {
   db.close();
 });
 
+app.post("/remove", (req, res) => {
+  let db = new sqlite3.Database("./db/users.db", (err) => {
+    if (err) {
+      return err;
+    }
+  });
+
+  let usr = req.body["usr"];
+  let colors = req.body["colors"];
+
+  console.log(usr, colors);
+  db.run(
+    "DELETE FROM Palettes WHERE user=(?) and colors=(?)",
+    [usr, colors],
+    (err) => {
+      if (err) {
+        console.log(err);
+        return err;
+      }
+      console.log("deleted");
+    }
+  );
+});
+
 app.post("/register", (req, res) => {
+  let db = new sqlite3.Database("./db/users.db", (err) => {
+    if (err) {
+      return err;
+    }
+  });
   let data = req.body;
 
   console.log("trying to register");
@@ -108,6 +136,29 @@ app.post("/register", (req, res) => {
       }
     }
   );
+});
+
+app.post("/generate", (req, res) => {
+  let arr = [];
+  let col = req.body["color"];
+  let col2 = "";
+  for (let i = 0; i < col.length; i++) {
+    if (col[i] != "#") {
+      col2 += col[i];
+    }
+  }
+  col2 = col2.toUpperCase();
+  fetch(
+    "https://www.thecolorapi.com/scheme?hex=" + col2 + "&mode=triad&count=5"
+  ).then((response) => {
+    response.json().then((data) => {
+      data["colors"].forEach((i) => {
+        arr.push(i["hex"]);
+      });
+      console.log(arr);
+      res.send(arr);
+    });
+  });
 });
 
 app.listen(port, () => {
