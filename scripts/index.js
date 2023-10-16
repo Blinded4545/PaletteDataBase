@@ -27,7 +27,7 @@ app.post("/getPalettes", (req, res) => {
     }
 
     rows.forEach((row) => {
-      arr.push(row["colors"]);
+      arr.push([row["colors"], row["name"]]);
     });
     res.send(arr);
   });
@@ -75,9 +75,11 @@ app.post("/postPalettes", (req, res) => {
   });
   console.log(colorsString);
 
+  let name = req.body["name"];
+
   db.run(
-    "INSERT INTO Palettes(user, colors) VALUES (?,?)",
-    [user, colorsString],
+    "INSERT INTO Palettes(user, colors, name) VALUES (?,?,?)",
+    [user, colorsString, name],
     (err) => {
       if (err) {
         return err;
